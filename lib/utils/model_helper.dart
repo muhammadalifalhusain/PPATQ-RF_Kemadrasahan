@@ -14,6 +14,18 @@ class ModelHelper {
     if (value is String) return int.tryParse(value) ?? defaultValue;
     return defaultValue;
   }
+  
+  static int? safeNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static Map<String, dynamic> safeMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    return <String, dynamic>{};
+  }
 
   static List<T> safeList<T>(
     dynamic value,

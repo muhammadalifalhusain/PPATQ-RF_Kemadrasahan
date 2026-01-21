@@ -20,6 +20,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   late Future<DashboardResponse> _santriFuture;
 
+  final TextEditingController _searchController = TextEditingController();
+
+  List<Santri> _allSantri = [];
+  List<Santri> _filteredSantri = [];
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +57,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _filterSantri(String keyword) {
+    final query = keyword.toLowerCase();
+
+    setState(() {
+      _filteredSantri = _allSantri.where((santri) {
+        return santri.nama.toLowerCase().contains(query) ||
+            santri.noInduk.toString().contains(query) ||
+            santri.kodeKelas.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,16 +77,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: Text(
           'Dashboard',
           style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          color: Colors.white
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.logout,
-              color: Colors.red,
-            ),
+            icon: const Icon(Icons.logout, color: Colors.red),
             onPressed: _forceLogout,
           ),
         ],
@@ -80,6 +94,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             _buildHeader(),
             const SizedBox(height: 24),
+            _buildSearchField(),
+            const SizedBox(height: 16),
             Expanded(child: _buildSantriList()),
           ],
         ),
@@ -121,6 +137,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      onChanged: _filterSantri,
+      decoration: InputDecoration(
+        hintText: 'Cari santri binaan...',
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSantriList() {
     return FutureBuilder<DashboardResponse>(
       future: _santriFuture,
@@ -138,22 +168,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }
 
-        final santriList = snapshot.data!.data;
+        if (_allSantri.isEmpty) {
+          _allSantri = snapshot.data!.data;
+          _filteredSantri = _allSantri;
+        }
 
-        if (santriList.isEmpty) {
+        if (_filteredSantri.isEmpty) {
           return Center(
             child: Text(
-              'Data santri tidak ditemukan',
+              'Santri tidak ditemukan',
               style: GoogleFonts.poppins(),
             ),
           );
         }
 
         return ListView.separated(
-          itemCount: santriList.length,
+          itemCount: _filteredSantri.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            final santri = santriList[index];
+            final santri = _filteredSantri[index];
             return _santriTile(santri);
           },
         );
@@ -186,5 +219,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
