@@ -59,7 +59,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: const Color(0xFF00695C),
         title: Text(
           'Dashboard',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          color: Colors.white
+          ),
         ),
         actions: [
           IconButton(
