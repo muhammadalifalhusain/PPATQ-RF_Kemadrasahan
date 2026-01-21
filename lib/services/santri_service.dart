@@ -1,8 +1,10 @@
 import 'dart:convert';
 
-import '../models/santri_model.dart';
 import '../utils/api_helper.dart';
 import '../utils/session_manager.dart';
+
+import '../models/santri_model.dart';
+import '../models/detail_santri_model.dart';
 
 class SantriService {
   static Future<DashboardResponse> getListSantri() async {
@@ -27,5 +29,21 @@ class SantriService {
     }
 
     return DashboardResponse.fromJson(json);
+  }
+
+  static Future<LaporanResponse> getDetailSantri(int noInduk) async {
+    final response = await ApiHelper.get(
+      '/kemadrasahan/get-data-santri/$noInduk',
+    );
+
+    final Map<String, dynamic> json = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        json['message'] ?? 'Gagal mengambil detail santri',
+      );
+    }
+
+    return LaporanResponse.fromJson(json);
   }
 }

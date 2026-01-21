@@ -1,8 +1,5 @@
 import '../utils/model_helper.dart';
 
-/// =======================
-/// MODEL SANTRI
-/// =======================
 class Santri {
   final int noInduk;
   final String nama;
@@ -26,11 +23,9 @@ class Santri {
   }
 }
 
-/// =======================
-/// MODEL DETAIL LAPORAN
-/// =======================
 class LaporanDetail {
   final int? id;
+  final String? namaMapel;
   final String? materi;
   final int? idLaporan;
   final String? deskripsiPenilaian;
@@ -39,6 +34,7 @@ class LaporanDetail {
 
   LaporanDetail({
     this.id,
+    this.namaMapel,
     this.materi,
     this.idLaporan,
     this.deskripsiPenilaian,
@@ -48,56 +44,51 @@ class LaporanDetail {
 
   factory LaporanDetail.fromJson(Map<String, dynamic> json) {
     return LaporanDetail(
-      id: ModelHelper.safeNullableInt(json['id']),
+      id: json['id'] is int ? json['id'] : null,
+      namaMapel: ModelHelper.safeString(json['namaMapel']),
       materi: ModelHelper.safeString(json['materi']),
-      idLaporan: ModelHelper.safeNullableInt(json['idLaporan']),
+      idLaporan: json['idLaporan'] is int ? json['idLaporan'] : null,
       deskripsiPenilaian:
           ModelHelper.safeString(json['deskripsiPenilaian']),
-      mingguKe: ModelHelper.safeNullableInt(json['mingguKe']),
+      mingguKe: json['mingguKe'] is int ? json['mingguKe'] : null,
       pengampu: ModelHelper.safeString(json['pengampu']),
     );
   }
 }
 
-/// =======================
-/// MODEL LAPORAN PER SEMESTER
-/// (VALUE dari Map laporan)
-/// =======================
-class LaporanSemester {
-  final int semester;
+class LaporanItem {
   final int? id;
-  final int? bulan;
-  final LaporanDetail detail;
+  final String? bulan;
+  final String? semester;
+  final String? kelas;
+  final List<LaporanDetail> detail;
 
-  LaporanSemester({
-    required this.semester,
+  LaporanItem({
     this.id,
     this.bulan,
+    this.semester,
+    this.kelas,
     required this.detail,
   });
 
-  factory LaporanSemester.fromJson(
-    Map<String, dynamic> json,
-    int semesterKey,
-  ) {
-    return LaporanSemester(
-      semester: semesterKey,
-      id: ModelHelper.safeNullableInt(json['id']),
-      bulan: ModelHelper.safeNullableInt(json['bulan']),
-      detail: LaporanDetail.fromJson(
-        ModelHelper.safeMap(json['detail']),
+  factory LaporanItem.fromJson(Map<String, dynamic> json) {
+    return LaporanItem(
+      id: json['id'] is int ? json['id'] : null,
+      bulan: ModelHelper.safeString(json['bulan']),
+      semester: ModelHelper.safeString(json['semester']),
+      kelas: ModelHelper.safeString(json['kelas']),
+      detail: ModelHelper.safeList(
+        json['detail'],
+        (e) => LaporanDetail.fromJson(e),
       ),
     );
   }
 }
 
-/// =======================
-/// ROOT RESPONSE
-/// =======================
 class LaporanResponse {
   final String status;
   final Santri santri;
-  final Map<int, LaporanSemester> laporan;
+  final Map<String, List<LaporanItem>> laporan;
 
   LaporanResponse({
     required this.status,
@@ -108,23 +99,22 @@ class LaporanResponse {
   bool get isSuccess => status == 'success';
 
   factory LaporanResponse.fromJson(Map<String, dynamic> json) {
-    final data = ModelHelper.safeMap(json['data']);
-    final laporanRaw = ModelHelper.safeMap(data['laporan']);
+    final data = json['data'] as Map<String, dynamic>? ?? {};
+    final laporanRaw = data['laporan'] as Map<String, dynamic>? ?? {};
 
-    final Map<int, LaporanSemester> parsedLaporan = {};
+    final Map<String, List<LaporanItem>> parsedLaporan = {};
 
     laporanRaw.forEach((key, value) {
-      final semester = int.tryParse(key.toString());
-      if (semester != null && value is Map<String, dynamic>) {
-        parsedLaporan[semester] =
-            LaporanSemester.fromJson(value, semester);
-      }
+      parsedLaporan[key] = ModelHelper.safeList(
+        value,
+        (e) => LaporanItem.fromJson(e),
+      );
     });
 
     return LaporanResponse(
       status: ModelHelper.safeString(json['status']) ?? 'unknown',
       santri: Santri.fromJson(
-        ModelHelper.safeMap(data['santri']),
+        data['santri'] as Map<String, dynamic>? ?? {},
       ),
       laporan: parsedLaporan,
     );
