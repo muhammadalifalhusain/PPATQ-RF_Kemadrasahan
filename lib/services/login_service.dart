@@ -2,7 +2,7 @@ import 'dart:convert';
 import '../models/user_model.dart';
 import '../utils/api_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../utils/session_manager.dart';
 
 class LoginService {
   static Future<Map<String, dynamic>> login(String email, String password) async {
@@ -15,10 +15,23 @@ class LoginService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        final murroby = Users.fromJson(data['data']);
+        // 1. Parse data menjadi model Users
+        // Pastikan model Users Anda sudah menangani field 'data' seperti diskusi sebelumnya
+        final users = Users.fromJson(data); 
+
+        // 2. SIMPAN KE SESSION (Penting!)
+        await SessionManager.saveUserSession(
+          idUser: users.idUser,
+          nama: users.nama,
+          photo: users.photo,
+          isWaliKelas: users.isWaliKelas,
+          accessToken: users.accessToken,
+          expiresIn: users.expiresIn,
+        );
+
         return {
           'success': true,
-          'data': murroby,
+          'data': users,
         };
       } else {
         return {

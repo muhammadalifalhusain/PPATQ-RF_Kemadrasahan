@@ -4,11 +4,13 @@ class UserSession {
   final int idUser;
   final String nama;
   final String photo;
+  final bool isWaliKelas; 
 
   UserSession({
     required this.idUser,
     required this.nama,
     required this.photo,
+    required this.isWaliKelas,
   });
 }
 
@@ -17,6 +19,7 @@ class SessionManager {
     required int idUser,
     required String nama,
     String? photo,
+    required bool isWaliKelas, 
     required String accessToken,
     required int expiresIn,
   }) async {
@@ -24,6 +27,7 @@ class SessionManager {
     await prefs.setInt('id', idUser);
     await prefs.setString('nama', nama);
     await prefs.setString('photo', photo ?? '');
+    await prefs.setBool('isWaliKelas', isWaliKelas); 
     await prefs.setString('accessToken', accessToken);
     await prefs.setInt('expiresIn', expiresIn);
     await prefs.setInt(
@@ -38,6 +42,7 @@ class SessionManager {
     final id = prefs.getInt('id');
     final nama = prefs.getString('nama');
     final photo = prefs.getString('photo');
+    final isWaliKelas = prefs.getBool('isWaliKelas') ?? false; 
 
     if (id == null || nama == null) return null;
 
@@ -45,7 +50,12 @@ class SessionManager {
       idUser: id,
       nama: nama,
       photo: photo ?? '',
+      isWaliKelas: isWaliKelas,
     );
+  }
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('accessToken');
   }
 
   static Future<void> clearSession() async {

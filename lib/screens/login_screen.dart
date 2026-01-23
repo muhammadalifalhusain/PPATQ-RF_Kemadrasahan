@@ -109,43 +109,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                     showDialog(
                                       context: context,
                                       barrierDismissible: false,
-                                      builder: (_) => const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
+                                      builder: (_) => const Center(child: CircularProgressIndicator()),
                                     );
-
                                     final result = await LoginService.login(
                                       emailController.text.trim(),
                                       passwordController.text.trim(),
                                     );
 
-                                    Navigator.pop(context);
+                                    if (!mounted) return;
+                                    Navigator.pop(context); 
 
                                     if (result['success']) {
-                                      final userData = result['data'];
-
-                                      await SessionManager.saveUserSession(
-                                        idUser: userData.idUser,
-                                        nama: userData.nama,
-                                        photo: userData.photo,
-                                        accessToken: userData.accessToken,
-                                        expiresIn: userData.expiresIn,
-                                      );
-
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (_) => DashboardScreen(),
-                                        ),
+                                        MaterialPageRoute(builder: (_) => DashboardScreen()),
                                       );
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            result['message'] ?? '',
-                                            style: GoogleFonts.poppins(),
-                                          ),
-                                        ),
+                                        SnackBar(content: Text(result['message'] ?? 'Login Gagal')),
                                       );
                                     }
                                   }

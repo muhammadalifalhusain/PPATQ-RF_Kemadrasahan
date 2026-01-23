@@ -148,7 +148,7 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
         title: Text(
           widget.tipeInput == 'bulk' 
               ? "Input Penilaian Kelas" 
-              : "Penilaian: ${widget.namaSantri}",
+              : "${widget.namaSantri}",
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             color: Colors.white,
