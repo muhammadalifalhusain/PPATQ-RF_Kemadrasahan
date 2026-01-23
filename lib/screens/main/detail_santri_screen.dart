@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_config.dart';
 import '../../models/detail_santri_model.dart';
 import '../../services/santri_service.dart';
-
+import '../../services/penilaian_service.dart';
 class DetailSantriScreen extends StatefulWidget {
   final int noInduk;
 
@@ -17,18 +17,96 @@ class DetailSantriScreen extends StatefulWidget {
 class _DetailSantriScreenState extends State<DetailSantriScreen>
     with SingleTickerProviderStateMixin {
   late Future<LaporanResponse> _detailFuture;
-  late TabController _tabController;
+  TabController? _tabController;
   List<String> _tabs = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _detailFuture = SantriService.getDetailSantri(widget.noInduk);
+    _fetchData();
+  }
+
+  // Fungsi untuk mengambil data (digunakan juga untuk refresh setelah hapus)
+  void _fetchData() {
+    setState(() {
+      _detailFuture = SantriService.getDetailSantri(widget.noInduk);
+    });
+  }
+
+  // --- LOGIKA DELETE ---
+  void _confirmDelete(int? id) {
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("ID Laporan tidak ditemukan")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text(
+            "Konfirmasi Hapus",
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          content: Text(
+            "Apakah Anda yakin ingin menghapus data penilaian ini?",
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Batal", style: GoogleFonts.poppins(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Tutup dialog
+                _handleDelete(id); // Jalankan hapus
+              },
+              child: Text("Hapus", style: GoogleFonts.poppins(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleDelete(int id) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await PenilaianService.deletePenilaian(id);
+
+      if (response.isSuccess) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: const Color(0xFF00695C),
+          ),
+        );
+        _fetchData(); 
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal menghapus: $e"), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -36,74 +114,73 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-      backgroundColor: const Color(0xFF00695C),
-      title: Text(
-        'Detail Santri',
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+        backgroundColor: const Color(0xFF00695C),
+        title: Text(
+          'Detail Santri',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: Colors.white,
-        ),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    ),
+      body: Stack(
+        children: [
+          FutureBuilder<LaporanResponse>(
+            future: _detailFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(snapshot.error.toString(), style: GoogleFonts.poppins(color: Colors.red)),
+                );
+              }
 
-      body: FutureBuilder<LaporanResponse>(
-        future: _detailFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                snapshot.error.toString(),
-                style: GoogleFonts.poppins(color: Colors.red),
-              ),
-            );
-          }
+              final data = snapshot.data!;
+              _tabs = data.laporan.keys.toList();
+              
+              // Inisialisasi controller hanya jika belum ada
+              _tabController ??= TabController(length: _tabs.length, vsync: this);
 
-          final data = snapshot.data!;
-          _tabs = data.laporan.keys.toList();
-          _tabController = TabController(length: _tabs.length, vsync: this);
-
-          return Column(
-            children: [
-              _buildSantriHeader(data.santri),
-              TabBar(
-                controller: _tabController,
-                tabs: _tabs.map((t) => Tab(text: t.toUpperCase())).toList(),
-                indicatorColor: const Color.fromARGB(255, 0, 0, 0),
-                labelColor: const Color.fromARGB(255, 0, 0, 0),
-                unselectedLabelColor: const Color.fromARGB(255, 11, 102, 26),
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: _tabs.map((semesterKey) {
-                    final items = data.laporan[semesterKey]!;
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(12),
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemCount: items.length,
-                      itemBuilder: (_, index) {
-                        final laporan = items[index];
-                        return _buildLaporanCard(laporan);
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          );
-        },
+              return Column(
+                children: [
+                  _buildSantriHeader(data.santri),
+                  TabBar(
+                    controller: _tabController,
+                    tabs: _tabs.map((t) => Tab(text: t.toUpperCase())).toList(),
+                    indicatorColor: const Color(0xFF00695C),
+                    labelColor: Colors.black,
+                    unselectedLabelColor: Colors.grey,
+                    labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: _tabs.map((semesterKey) {
+                        final items = data.laporan[semesterKey]!;
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(12),
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemCount: items.length,
+                          itemBuilder: (_, index) {
+                            return _buildLaporanCard(items[index]);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -119,8 +196,9 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
         children: [
           CircleAvatar(
             radius: 36,
+            backgroundColor: const Color(0xFF00695C).withOpacity(0.1),
             backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-            child: photoUrl == null ? const Icon(Icons.person, size: 36) : null,
+            child: photoUrl == null ? const Icon(Icons.person, size: 36, color: Color(0xFF00695C)) : null,
           ),
           const SizedBox(width: 12),
           Column(
@@ -128,10 +206,7 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
             children: [
               Text(
                 santri.nama,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 18),
               ),
               const SizedBox(height: 4),
               Text(
@@ -154,7 +229,6 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Kartu: Menampilkan Bulan
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -166,7 +240,7 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
               ),
             ),
             child: Text(
-              'Periode: ${laporan.bulan ?? "-"} ${laporan.semester == "1" ? "Ganjil" : "Genap"}',
+              'Periode: ${laporan.bulan ?? "-"}',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
@@ -174,7 +248,6 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
               ),
             ),
           ),
-          
           if (laporan.detail.isEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
@@ -195,15 +268,14 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Tile: Mapel, Materi, dan Tombol Aksi
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -213,51 +285,41 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
                 ),
                 child: Text(
                   (d.namaMapel ?? "Mapel").toUpperCase(),
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   d.materi ?? "-",
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => _confirmDelete(d.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
+                      child: Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red.shade700),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            "Deskripsi Penilaian:",
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          const SizedBox(height: 12),
           Text(
             d.deskripsiPenilaian ?? "-",
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: Colors.black87,
-              height: 1.5,
-            ),
+            style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87.withOpacity(0.8), height: 1.5),
           ),
-          
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 12),
-          
-          // Footer: Pengampu dan Minggu
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -269,11 +331,7 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
                     Expanded(
                       child: Text(
                         d.pengampu ?? "-",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF00695C),
-                        ),
+                        style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF00695C)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -283,17 +341,10 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(20)),
                 child: Text(
                   "Minggu ke-${d.mingguKe}",
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade800,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
                 ),
               ),
             ],

@@ -89,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         ),
                       ),
                       TextSpan(
-                        text: 'PPATQ Raudlatul Falah',
+                        text: 'Raudlatul Falah Developer',
                         style: TextStyle(
                           color: Color(0xFF00695C),
                           fontSize: 20,
@@ -102,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Beta Version',
+                  'Version 1.0.1',
                   style: TextStyle(
                     color: Colors.grey[500],
                     fontSize: 14,
