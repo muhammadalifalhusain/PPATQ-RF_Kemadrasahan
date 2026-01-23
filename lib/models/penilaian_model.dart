@@ -53,3 +53,19 @@ class StorePenilaianResponse {
     );
   }
 }
+
+class DeleteResponse {
+  final String status;
+  final String message;
+
+  DeleteResponse({required this.status, required this.message});
+
+  bool get isSuccess => status == 'success';
+
+  factory DeleteResponse.fromJson(Map<String, dynamic> json) {
+    return DeleteResponse(
+      status: json['status'] ?? 'error',
+      message: json['message'] ?? '',
+    );
+  }
+}

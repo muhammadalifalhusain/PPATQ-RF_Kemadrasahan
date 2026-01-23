@@ -77,7 +77,6 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
           return Column(
             children: [
               _buildSantriHeader(data.santri),
-              const SizedBox(height: 12),
               TabBar(
                 controller: _tabController,
                 tabs: _tabs.map((t) => Tab(text: t.toUpperCase())).toList(),
@@ -136,7 +135,7 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                'No Induk: ${santri.noInduk} • Kelas: ${santri.kodeKelas}',
+                'No Induk: ${santri.noInduk} • ${santri.kodeKelas}',
                 style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
               ),
             ],
@@ -148,56 +147,158 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
 
   Widget _buildLaporanCard(LaporanItem laporan) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Bulan: ${laporan.bulan ?? "-"} | Semester: ${laporan.semester ?? "-"}',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 3,
+      shadowColor: Colors.black12,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Kartu: Menampilkan Bulan
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00695C).withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
               ),
             ),
-            if (laporan.detail.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Periode: ${laporan.bulan ?? "-"} ${laporan.semester == "1" ? "Ganjil" : "Genap"}',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: const Color(0xFF00695C),
+              ),
+            ),
+          ),
+          
+          if (laporan.detail.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Center(
                 child: Text(
                   'Tidak ada data penilaian',
-                  style: GoogleFonts.poppins(color: Colors.grey),
+                  style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13),
                 ),
               ),
-            ...laporan.detail.map((d) => _buildDetailTile(d)).toList(),
-          ],
-        ),
+            ),
+          ...laporan.detail.map((d) => _buildDetailTile(d)).toList(),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailTile(LaporanDetail detail) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          detail.materi ?? '-',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+  Widget _buildDetailTile(LaporanDetail d) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade100, width: 1),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (detail.namaMapel != null)
-              Text('Mapel: ${detail.namaMapel}', style: GoogleFonts.poppins(fontSize: 12)),
-            if (detail.deskripsiPenilaian != null)
-              Text('Penilaian: ${detail.deskripsiPenilaian}', style: GoogleFonts.poppins(fontSize: 12)),
-            if (detail.pengampu != null)
-              Text('Pengampu: ${detail.pengampu}', style: GoogleFonts.poppins(fontSize: 12)),
-            if (detail.mingguKe != null)
-              Text('Minggu ke: ${detail.mingguKe}', style: GoogleFonts.poppins(fontSize: 12)),
-          ],
-        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00695C),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  (d.namaMapel ?? "Mapel").toUpperCase(),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  d.materi ?? "-",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Deskripsi Penilaian:",
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            d.deskripsiPenilaian ?? "-",
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: Colors.black87,
+              height: 1.5,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          
+          // Footer: Pengampu dan Minggu
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_outline, size: 14, color: Color(0xFF00695C)),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        d.pengampu ?? "-",
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF00695C),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "Minggu ke-${d.mingguKe}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

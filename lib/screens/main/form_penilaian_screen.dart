@@ -98,7 +98,13 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
         deskripsiPenilaian: _deskripsiController.text,
       );
 
+      print("--- DATA DEBUG ---");
+      print("Payload: ${jsonEncode(request.toJson())}");
+
       final response = await PenilaianService.storePenilaian(request);
+
+      print("Status: ${response.status}");
+      print("Message: ${response.message}");
 
       if (response.isSuccess) {
         if (!mounted) return;
@@ -119,6 +125,7 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
         );
       }
     } catch (e) {
+      print("Error: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

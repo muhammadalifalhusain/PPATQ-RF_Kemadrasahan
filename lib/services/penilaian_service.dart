@@ -16,4 +16,19 @@ class PenilaianService {
 
     return StorePenilaianResponse.fromJson(json);
   }
+
+  static Future<DeleteResponse> deletePenilaian(int idDetail) async {
+    final response = await ApiHelper.delete(
+      '/kemadrasahan/delete/$idDetail',
+    );
+
+    final Map<String, dynamic> json = jsonDecode(response.body);
+    
+    if (response.statusCode != 200) {
+      throw Exception(json['message'] ?? 'Gagal menghapus data');
+    }
+
+    return DeleteResponse.fromJson(json);
+  }
+
 }
