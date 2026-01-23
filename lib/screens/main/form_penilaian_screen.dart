@@ -197,13 +197,32 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Informasi Akademik",
-            style: GoogleFonts.poppins( 
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF00695C),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Informasi Akademik",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF00695C),
+                ),
+              ),
+              Container(
+                height: 32,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F4),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    _buildSemesterTab("Ganjil", 1), 
+                    _buildSemesterTab("Genap", 2),  
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           _buildDropdownContainer(
@@ -212,12 +231,12 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
               child: DropdownButton<int>(
                 isExpanded: true,
                 value: _selectedMapelId,
-                style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14), 
+                style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14),
                 hint: Text("Pilih Mata Pelajaran", style: GoogleFonts.poppins(fontSize: 14)),
                 items: _listMapel.map((m) {
                   return DropdownMenuItem(
-                    value: m.id, 
-                    child: Text(m.nama, style: GoogleFonts.poppins()) 
+                    value: m.id,
+                    child: Text(m.nama, style: GoogleFonts.poppins()),
                   );
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedMapelId = val),
@@ -236,8 +255,8 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
                       value: _selectedBulan,
                       style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14),
                       items: _bulanList.map((b) => DropdownMenuItem(
-                        value: b, 
-                        child: Text(b, style: GoogleFonts.poppins())
+                        value: b,
+                        child: Text(b, style: GoogleFonts.poppins()),
                       )).toList(),
                       onChanged: (val) => setState(() => _selectedBulan = val!),
                     ),
@@ -252,11 +271,11 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
                     child: DropdownButton<int>(
                       isExpanded: true,
                       value: _selectedMinggu,
-                      style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14), 
+                      style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14),
                       items: List.generate(4, (i) => i + 1)
                           .map((m) => DropdownMenuItem(
-                            value: m, 
-                            child: Text("Minggu-$m", style: GoogleFonts.poppins()) 
+                            value: m,
+                            child: Text("Minggu-$m", style: GoogleFonts.poppins()),
                           ))
                           .toList(),
                       onChanged: (val) => setState(() => _selectedMinggu = val!),
@@ -267,6 +286,28 @@ class _FormPenilaianScreenState extends State<FormPenilaianScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+  Widget _buildSemesterTab(String label, int value) {
+    bool isSelected = _selectedSemester == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedSemester = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color.fromARGB(255, 159, 14, 23) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? Colors.white : const Color.fromARGB(255, 171, 17, 17),
+          ),
+        ),
       ),
     );
   }

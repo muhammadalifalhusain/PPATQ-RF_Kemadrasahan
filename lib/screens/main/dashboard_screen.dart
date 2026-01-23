@@ -94,9 +94,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           children: [
             _buildHeader(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             _buildSearchField(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
             Expanded(child: _buildSantriList()),
           ],
         ),
@@ -239,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
         ),
         subtitle: Text(
-          'No Induk: ${santri.noInduk} • Kelas ${santri.kodeKelas}',
+          'No Induk: ${santri.noInduk} • ${santri.kodeKelas}',
           style: GoogleFonts.poppins(fontSize: 12),
         ),
         trailing: Row(
