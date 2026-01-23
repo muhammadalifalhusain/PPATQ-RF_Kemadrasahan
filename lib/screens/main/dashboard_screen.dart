@@ -7,7 +7,7 @@ import '../../services/santri_service.dart';
 import '../../utils/session_manager.dart';
 import '../login_screen.dart';
 import 'detail_santri_screen.dart';
-
+import 'form_penilaian_screen.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -139,16 +139,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildSearchField() {
-    return TextField(
-      controller: _searchController,
-      onChanged: _filterSantri,
-      decoration: InputDecoration(
-        hintText: 'Cari santri binaan...',
-        prefixIcon: const Icon(Icons.search),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            onChanged: _filterSantri,
+            decoration: InputDecoration(
+              hintText: 'Cari santri binaan...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 8),
+        // Tombol Input Massal (Bulk)
+        Material(
+          color: Colors.blue.shade700,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FormPenilaianScreen(tipeInput: 'bulk')),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: const Icon(Icons.group_add, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -217,22 +242,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'No Induk: ${santri.noInduk} • Kelas ${santri.kodeKelas}',
           style: GoogleFonts.poppins(fontSize: 12),
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.add_circle, color: Colors.green),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DetailSantriScreen(noInduk: santri.noInduk),
-              ),
-            );
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min, 
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.blue),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FormPenilaianScreen(
+                      tipeInput: 'single',
+                      noInduk: santri.noInduk,
+                      namaSantri: santri.nama,
+                    ),
+                  ),
+                ).then((value) {
+                  if (value == true) {
+                    _initDashboard(); 
+                  }
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.black54, size: 18),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailSantriScreen(noInduk: santri.noInduk),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
-
-
   @override
   void dispose() {
     _searchController.dispose();
