@@ -36,19 +36,31 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Detail Santri',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+      backgroundColor: const Color(0xFF00695C),
+      title: Text(
+        'Detail Santri',
+        style: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
-        backgroundColor: const Color(0xFF00695C),
       ),
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+    ),
+
       body: FutureBuilder<LaporanResponse>(
         future: _detailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (snapshot.hasError) {
             return Center(
               child: Text(
@@ -69,9 +81,9 @@ class _DetailSantriScreenState extends State<DetailSantriScreen>
               TabBar(
                 controller: _tabController,
                 tabs: _tabs.map((t) => Tab(text: t.toUpperCase())).toList(),
-                indicatorColor: Colors.white,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[300],
+                indicatorColor: const Color.fromARGB(255, 0, 0, 0),
+                labelColor: const Color.fromARGB(255, 0, 0, 0),
+                unselectedLabelColor: const Color.fromARGB(255, 11, 102, 26),
               ),
               Expanded(
                 child: TabBarView(

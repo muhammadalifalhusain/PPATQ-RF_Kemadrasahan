@@ -6,6 +6,7 @@ import '../../models/santri_model.dart';
 import '../../services/santri_service.dart';
 import '../../utils/session_manager.dart';
 import '../login_screen.dart';
+import 'detail_santri_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -195,8 +196,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _santriTile(Santri santri) {
-    final photoUrl = santri.foto.isNotEmpty
-        ? AppConfig.photoBaseUrl + santri.foto
+    final photoUrl = (santri.foto != null && santri.foto!.isNotEmpty)
+        ? AppConfig.photoBaseUrl + santri.foto!
         : null;
 
     return Card(
@@ -205,8 +206,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage:
-              photoUrl != null ? NetworkImage(photoUrl) : null,
+          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
           child: photoUrl == null ? const Icon(Icons.person) : null,
         ),
         title: Text(
@@ -217,9 +217,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'No Induk: ${santri.noInduk} • Kelas ${santri.kodeKelas}',
           style: GoogleFonts.poppins(fontSize: 12),
         ),
+        trailing: IconButton(
+          icon: const Icon(Icons.add_circle, color: Colors.green),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetailSantriScreen(noInduk: santri.noInduk),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
+
 
   @override
   void dispose() {
